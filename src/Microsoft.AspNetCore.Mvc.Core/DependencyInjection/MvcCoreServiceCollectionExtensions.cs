@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.ErrorDescription;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Internal;
@@ -258,6 +259,9 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<MiddlewareFilterConfigurationProvider>();
             // This maintains a cache of middleware pipelines, so it needs to be a singleton
             services.TryAddSingleton<MiddlewareFilterBuilder>();
+
+            services.TryAddTransient<ProblemFilter>();
+            services.TryAddTransient<IErrorDescriptionFactory, DefaultErrorDescriptorFactory>();
         }
 
         private static void ConfigureDefaultServices(IServiceCollection services)

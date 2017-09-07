@@ -1,13 +1,15 @@
-﻿using System;
+﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
+
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 
 namespace Microsoft.AspNetCore.Mvc.ErrorDescription
 {
     public interface IErrorDescriptionFactory
     {
-        object CreateErrorDescription(ActionContext actionContext, object result);
+        object CreateErrorDescription(ActionDescriptor actionDescriptor, object result);
     }
 
     public interface IErrorDescriptorProvider
@@ -21,12 +23,12 @@ namespace Microsoft.AspNetCore.Mvc.ErrorDescription
 
     public class ErrorDescriptionContext
     {
-        public ErrorDescriptionContext(ActionContext actionContext)
+        public ErrorDescriptionContext(ActionDescriptor actionDescriptor)
         {
-            ActionContext = actionContext;
+            ActionDescriptor = actionDescriptor;
         }
 
-        public ActionContext ActionContext { get; }
+        public ActionDescriptor ActionDescriptor { get; }
 
         public object Result { get; set; }
     }
@@ -40,9 +42,9 @@ namespace Microsoft.AspNetCore.Mvc.ErrorDescription
             _providers = providers.OrderBy(p => p.Order).ToArray();
         }
 
-        public object CreateErrorDescription(ActionContext actionContext, object result)
+        public object CreateErrorDescription(ActionDescriptor actionDescriptor, object result)
         {
-            var context = new ErrorDescriptionContext(actionContext)
+            var context = new ErrorDescriptionContext(actionDescriptor)
             {
                 Result = result,
             };
@@ -58,42 +60,6 @@ namespace Microsoft.AspNetCore.Mvc.ErrorDescription
             }
 
             return context.Result ?? result;
-        }
-    }
-
-    public class ProblemErrorDescriptionProvider : IErrorDescriptorProvider
-    {
-        public int Order => -1000;
-
-        public void OnProvidersExecuted(ErrorDescriptionContext context)
-        {
-            if (context.Result is StatusCodeResult statusCodeResult)
-            {
-                var statusCode = statusCodeResult.StatusCode;
-                if (statusCode == StatusCodes.Status400BadRequest)
-                {
-                    var problem = new ProblemDescription
-                    {
-                        Status = statusCodeResult.StatusCode,
-                        Title = "400 Bad Request",
-                    };
-                    context.Result = problem;
-                }
-                else if (statusCode == StatusCodes.Status404NotFound && 
-                    context.ActionContext.ActionDescriptor.Parameters.Any(p => string.Equals(p.Name, "id", StringComparison.OrdinalIgnoreCase)))
-                {
-                    var problem = new ProblemDescription
-                    {
-                        Status = statusCodeResult.StatusCode,
-                        Title = "No value found for the specified id.",
-                    };
-                    context.Result = problem;
-                }
-            }
-        }
-
-        public void OnProvidersExecuting(ErrorDescriptionContext context)
-        {
         }
     }
 }
