@@ -692,7 +692,8 @@ namespace Microsoft.AspNetCore.Mvc.ViewFeatures
             {
                 value = entry.AttemptedValue;
             }
-            else if (modelExplorer.Model != null)
+            // should convention be for Model changes to overrider ViewData changes??
+            if (modelExplorer.Model != null)
             {
                 value = modelExplorer.Model.ToString();
             }
